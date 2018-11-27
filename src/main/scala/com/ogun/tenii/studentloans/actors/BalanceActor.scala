@@ -18,7 +18,7 @@ class BalanceActor extends Actor with LazyLogging with StudentLoanImplicit {
     case request : GetStudentLoanRequest =>
       val senderRef = sender()
       Future {
-        connection.findByAccountId(request.userId)
+        connection.findByUserId(request.userId)
       } onComplete {
         case Success(loan) => loan match {
           case Some(acc) => senderRef ! GetStudentLoanResponse(Some(toAPIStudentLoan(acc)))

@@ -10,7 +10,11 @@ class StudentLoanConnection extends ObjectMongoConnection[StudentLoan] with Lazy
   val collection = "studentLoan"
 
   override def transform(obj: StudentLoan): MongoDBObject = {
-    MongoDBObject("_id" -> obj.id, "accountId" -> obj.accountId, "percentage" -> obj.percentage, "balance" -> obj.balance)
+    MongoDBObject("_id" -> obj.id, "userId" -> obj.userId, "accountId" -> obj.accountId, "percentage" -> obj.percentage, "balance" -> obj.balance)
+  }
+
+  def findByUserId(userId: String): Option[StudentLoan] = {
+    findByProperty("userId", userId, s"No account found with userId: $userId")
   }
 
   def findByAccountId(accountId: String): Option[StudentLoan] = {
@@ -23,9 +27,10 @@ class StudentLoanConnection extends ObjectMongoConnection[StudentLoan] with Lazy
   override def revert(obj: MongoDBObject): StudentLoan = {
     StudentLoan(
       Some(getObjectId(obj, "_id")),
+      getString(obj, "userId"),
       getString(obj, "accountId"),
-      getDouble(obj, "percentage"),
-      getDouble(obj, "balance")
+      getDouble(obj, "balance"),
+      getDouble(obj, "percentage")
     )
   }
 

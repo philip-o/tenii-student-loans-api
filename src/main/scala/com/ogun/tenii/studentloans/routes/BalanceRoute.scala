@@ -24,10 +24,10 @@ class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
   protected val balanceActor: ActorRef = system.actorOf(Props[BalanceActor])
 
   def route: Route = pathPrefix("balance") {
-    getBankAccount
+    getLoanBalance
   }
 
-  def getBankAccount: Route =
+  def getLoanBalance: Route =
     get {
       path(userIdDirective).as(GetStudentLoanRequest) {
         request =>

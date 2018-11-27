@@ -7,9 +7,19 @@ trait StudentLoanImplicit {
 
   def toAPIStudentLoan(loan: StudentLoan) : APIStudentLoan = {
     APIStudentLoan(
+      loan.userId,
       loan.accountId,
       loan.balance,
       loan.percentage
+    )
+  }
+
+  implicit def toDBStudentLoan(loan: APIStudentLoan) : StudentLoan = {
+    StudentLoan(
+      userId = loan.userId,
+      accountId = loan.accountId,
+      balance = loan.balance,
+      percentage = loan.percentage
     )
   }
 }
