@@ -10,7 +10,7 @@ trait StudentLoanImplicit {
       loan.userId,
       loan.accountId,
       loan.balance,
-      loan.percentage
+      loan.rate
     )
   }
 
@@ -19,7 +19,7 @@ trait StudentLoanImplicit {
       userId = loan.userId,
       accountId = loan.accountId,
       balance = loan.balance,
-      percentage = loan.percentage
+      rate = loan.rate
     )
   }
 }
