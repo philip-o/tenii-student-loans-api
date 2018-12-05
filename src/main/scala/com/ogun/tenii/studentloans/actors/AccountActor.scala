@@ -3,7 +3,7 @@ package com.ogun.tenii.studentloans.actors
 import akka.actor.Actor
 import com.ogun.tenii.studentloans.db.StudentLoanConnection
 import com.ogun.tenii.studentloans.implicits.StudentLoanImplicit
-import com.ogun.tenii.studentloans.model.api.{CreateStudentLoanResponse, StudentLoan}
+import com.ogun.tenii.studentloans.model.api.{CreateStudentLoan, CreateStudentLoanResponse, StudentLoan}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.Future
@@ -16,7 +16,7 @@ class AccountActor extends Actor with LazyLogging with StudentLoanImplicit {
 
   override def receive: Receive = {
 
-    case req: StudentLoan =>
+    case req: CreateStudentLoan =>
       val senderRef = sender()
       val userIdFuture = Future { connection.findByUserId(req.userId) }
       val accountIdFuture = Future { connection.findByAccountId(req.accountId) }

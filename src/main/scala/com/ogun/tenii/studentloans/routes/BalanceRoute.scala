@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.{CircuitBreaker, ask}
 import akka.util.Timeout
 import com.ogun.tenii.studentloans.actors.BalanceActor
-import com.ogun.tenii.studentloans.model.api.{GetStudentLoanRequest, GetStudentLoanResponse}
+import com.ogun.tenii.studentloans.model.api.{GetStudentLoanRequest, GetStudentLoanResponse, UpdateStudentLoanBalanceRequest, UpdateStudentLoanBalanceResponse}
 import com.typesafe.scalalogging.LazyLogging
 import javax.ws.rs.Path
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
@@ -24,7 +24,7 @@ class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
   protected val balanceActor: ActorRef = system.actorOf(Props[BalanceActor])
 
   def route: Route = pathPrefix("balance") {
-    getLoanBalance
+    getLoanBalance ~ updateBalance
   }
 
   def getLoanBalance: Route =
@@ -38,5 +38,18 @@ class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
             case Failure(t) => failWith(t)
           }
       }
+    }
+
+  def updateBalance: Route =
+    post {
+        entity(as[UpdateStudentLoanBalanceRequest]) {
+          request =>
+            logger.info(s"POST /balance - $request")
+            onCompleteWithBreaker(breaker)(balanceActor ? request) {
+              case Success(msg: UpdateStudentLoanBalanceResponse) if msg.cause.isEmpty => complete(StatusCodes.OK -> msg.loan)
+              case Success(msg: UpdateStudentLoanBalanceResponse) => complete(StatusCodes.BadRequest -> msg)
+              case Failure(t) => failWith(t)
+            }
+        }
     }
 }

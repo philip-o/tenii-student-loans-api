@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.{CircuitBreaker, ask}
 import akka.util.Timeout
 import com.ogun.tenii.studentloans.actors.AccountActor
-import com.ogun.tenii.studentloans.model.api.{CreateStudentLoanResponse, StudentLoan}
+import com.ogun.tenii.studentloans.model.api.{CreateStudentLoan, CreateStudentLoanResponse}
 import com.typesafe.scalalogging.LazyLogging
 import javax.ws.rs.Path
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
@@ -29,7 +29,7 @@ class AccountRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
 
   def createAccount: Route =
     post {
-      entity(as[StudentLoan]) {
+      entity(as[CreateStudentLoan]) {
       request =>
           logger.info(s"POST /account - $request")
           onCompleteWithBreaker(breaker)(accountActor ? request) {
