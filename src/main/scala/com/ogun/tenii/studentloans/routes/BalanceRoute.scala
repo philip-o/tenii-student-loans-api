@@ -6,17 +6,19 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.{CircuitBreaker, ask}
 import akka.util.Timeout
 import com.ogun.tenii.studentloans.actors.BalanceActor
-import com.ogun.tenii.studentloans.model.api.{GetStudentLoanRequest, GetStudentLoanResponse, UpdateStudentLoanBalanceRequest, UpdateStudentLoanBalanceResponse}
+import com.ogun.tenii.studentloans.model.api._
 import com.typesafe.scalalogging.LazyLogging
 import javax.ws.rs.Path
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe.generic.auto._
+import io.swagger.annotations._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 @Path("balance")
+@Api(value = "/balance", description = "Process student loan account info", produces = "application/json")
 class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extends RequestDirectives with LazyLogging {
 
   implicit val executor: ExecutionContext = system.dispatcher
@@ -27,6 +29,16 @@ class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
     getLoanBalance ~ updateBalance
   }
 
+  @Path("{userId}")
+  @ApiOperation(httpMethod = "GET", response = classOf[GetStudentLoanResponse], value = "balance")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "userId", dataType = "string", paramType = "path", value = "Tenii Id for the user", required = true)
+  ))
+  @ApiResponses(Array(
+    new ApiResponse(code = 201, message = "Created", response = classOf[StudentLoan]),
+    new ApiResponse(code = 400, message = "Bad request", response = classOf[GetStudentLoanResponse]),
+    new ApiResponse(code = 500, message = "Internal Server Error", response = classOf[Throwable])
+  ))
   def getLoanBalance: Route =
     get {
       path(userIdDirective).as(GetStudentLoanRequest) {
@@ -40,6 +52,26 @@ class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
       }
     }
 
+  @ApiOperation(
+    httpMethod = "POST",
+    response = classOf[CreateStudentLoan],
+    value = "Update student loan info",
+    consumes = "application/json",
+    notes =
+      """
+         Update student loan info
+      """
+  )
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "teniiId", dataType = "string", value = "The tenii Id for the user to find their account", paramType = "body", required = true),
+    new ApiImplicitParam(name = "balance", dataType = "double", paramType = "body", value = "The current balance for the account", required = true),
+    new ApiImplicitParam(name = "rate", dataType = "string", paramType = "body", value = "The interest rate recorded on the account", required = true)
+  ))
+  @ApiResponses(Array(
+    new ApiResponse(code = 201, message = "Created", response = classOf[StudentLoan]),
+    new ApiResponse(code = 400, message = "Bad request", response = classOf[UpdateStudentLoanBalanceResponse]),
+    new ApiResponse(code = 500, message = "Internal Server Error", response = classOf[Throwable])
+  ))
   def updateBalance: Route =
     post {
         entity(as[UpdateStudentLoanBalanceRequest]) {
