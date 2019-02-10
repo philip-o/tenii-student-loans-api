@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.{CircuitBreaker, ask}
 import akka.util.Timeout
 import com.ogun.tenii.studentloans.actors.AccountActor
-import com.ogun.tenii.studentloans.model.api.{CreateStudentLoan, CreateStudentLoanResponse, StudentLoan}
+import com.ogun.tenii.studentloans.model.api.{CreateStudentLoan, CreateStudentLoanResponse, ErrorResponse, StudentLoan}
 import com.typesafe.scalalogging.LazyLogging
 import javax.ws.rs.Path
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
@@ -48,7 +48,7 @@ class AccountRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
   ))
   @ApiResponses(Array(
     new ApiResponse(code = 201, message = "Created", response = classOf[StudentLoan]),
-    new ApiResponse(code = 400, message = "Bad request", response = classOf[CreateStudentLoanResponse]),
+    new ApiResponse(code = 400, message = "Bad request", response = classOf[ErrorResponse]),
     new ApiResponse(code = 500, message = "Internal Server Error", response = classOf[Throwable])
   ))
   def createAccount: Route =
@@ -58,7 +58,7 @@ class AccountRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
           logger.info(s"POST /account - $request")
           onCompleteWithBreaker(breaker)(accountActor ? request) {
             case Success(msg: CreateStudentLoanResponse) if msg.cause.isEmpty => complete(StatusCodes.OK -> msg.loan)
-            case Success(msg: CreateStudentLoanResponse) => complete(StatusCodes.BadRequest -> msg)
+            case Success(msg: ErrorResponse) => complete(StatusCodes.BadRequest -> msg)
             case Failure(t) => failWith(t)
           }
       }

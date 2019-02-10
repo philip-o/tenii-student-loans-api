@@ -3,7 +3,7 @@ package com.ogun.tenii.studentloans.actors
 import akka.actor.Actor
 import com.ogun.tenii.studentloans.db.StudentLoanConnection
 import com.ogun.tenii.studentloans.implicits.StudentLoanImplicit
-import com.ogun.tenii.studentloans.model.api.{CreateStudentLoan, CreateStudentLoanResponse, StudentLoan}
+import com.ogun.tenii.studentloans.model.api.{CreateStudentLoan, CreateStudentLoanResponse, ErrorResponse, StudentLoan}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.Future
@@ -31,12 +31,12 @@ class AccountActor extends Actor with LazyLogging with StudentLoanImplicit {
         } onComplete {
           case Success(_) => senderRef ! CreateStudentLoanResponse(Some(req), None)
           case Failure(t) => logger.error(s"Error thrown when saving student loan: $req", t)
-            senderRef ! CreateStudentLoanResponse(None, Some(s"Error when saving student loan: $t"))
+            senderRef ! ErrorResponse("CREATE_ERROR", Some(s"Error when saving student loan: $t"))
         }
         case Success(_) => logger.error(s"Student loan already exists: $req.  Please check")
-          senderRef ! CreateStudentLoanResponse(None, Some(s"Student loan already exists: $req.  Please check"))
+          senderRef ! ErrorResponse("EXISTING_USER_ERROR", Some(s"Student loan already exists: $req.  Please check"))
         case Failure(t) => logger.error(s"Error thrown when looking up student loan: $req", t)
-          senderRef ! CreateStudentLoanResponse(None, Some(s"Error when looking up student loan: $t"))
+          senderRef ! ErrorResponse("LOOKUP_ERROR", Some(s"Error when looking up student loan: $t"))
       }
     case other => logger.error(s"Unknown message received: $other")
   }

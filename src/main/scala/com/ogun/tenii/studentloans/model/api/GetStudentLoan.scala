@@ -6,4 +6,4 @@ case class CreateStudentLoan(userId: String, accountId: String, balance: Double,
 
 case class StudentLoan(userId: String, accountId: String, balance: Double, rate: Double)
 
-case class GetStudentLoanResponse(loan: Option[StudentLoan], cause: Option[String] = None)
+case class GetStudentLoanResponse(loan: StudentLoan)

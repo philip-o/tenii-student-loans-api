@@ -35,8 +35,8 @@ class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
     new ApiImplicitParam(name = "userId", dataType = "string", paramType = "path", value = "Tenii Id for the user", required = true)
   ))
   @ApiResponses(Array(
-    new ApiResponse(code = 201, message = "Created", response = classOf[StudentLoan]),
-    new ApiResponse(code = 400, message = "Bad request", response = classOf[GetStudentLoanResponse]),
+    new ApiResponse(code = 200, message = "Ok", response = classOf[StudentLoan]),
+    new ApiResponse(code = 400, message = "Bad request", response = classOf[ErrorResponse]),
     new ApiResponse(code = 500, message = "Internal Server Error", response = classOf[Throwable])
   ))
   def getLoanBalance: Route =
@@ -45,8 +45,8 @@ class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
         request =>
           logger.info(s"GET /balance - $request")
           onCompleteWithBreaker(breaker)(balanceActor ? request) {
-            case Success(msg: GetStudentLoanResponse) if msg.cause.isEmpty => complete(StatusCodes.OK -> msg.loan)
-            case Success(msg: GetStudentLoanResponse) => complete(StatusCodes.BadRequest -> msg)
+            case Success(msg: GetStudentLoanResponse) => complete(StatusCodes.OK -> msg.loan)
+            case Success(msg: ErrorResponse) => complete(StatusCodes.BadRequest -> msg)
             case Failure(t) => failWith(t)
           }
       }
@@ -68,8 +68,8 @@ class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
     new ApiImplicitParam(name = "rate", dataType = "string", paramType = "body", value = "The interest rate recorded on the account", required = true)
   ))
   @ApiResponses(Array(
-    new ApiResponse(code = 201, message = "Created", response = classOf[StudentLoan]),
-    new ApiResponse(code = 400, message = "Bad request", response = classOf[UpdateStudentLoanBalanceResponse]),
+    new ApiResponse(code = 200, message = "Ok", response = classOf[StudentLoan]),
+    new ApiResponse(code = 400, message = "Bad request", response = classOf[ErrorResponse]),
     new ApiResponse(code = 500, message = "Internal Server Error", response = classOf[Throwable])
   ))
   def updateBalance: Route =
@@ -78,8 +78,8 @@ class BalanceRoute(implicit system: ActorSystem, breaker: CircuitBreaker) extend
           request =>
             logger.info(s"POST /balance - $request")
             onCompleteWithBreaker(breaker)(balanceActor ? request) {
-              case Success(msg: UpdateStudentLoanBalanceResponse) if msg.cause.isEmpty => complete(StatusCodes.OK -> msg.loan)
-              case Success(msg: UpdateStudentLoanBalanceResponse) => complete(StatusCodes.BadRequest -> msg)
+              case Success(msg: UpdateStudentLoanBalanceResponse) => complete(StatusCodes.OK -> msg.loan)
+              case Success(msg: ErrorResponse) => complete(StatusCodes.BadRequest -> msg)
               case Failure(t) => failWith(t)
             }
         }

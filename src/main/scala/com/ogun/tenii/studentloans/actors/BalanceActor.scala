@@ -3,7 +3,7 @@ package com.ogun.tenii.studentloans.actors
 import akka.actor.Actor
 import com.ogun.tenii.studentloans.db.StudentLoanConnection
 import com.ogun.tenii.studentloans.implicits.StudentLoanImplicit
-import com.ogun.tenii.studentloans.model.api.{GetStudentLoanRequest, GetStudentLoanResponse, UpdateStudentLoanBalanceRequest, UpdateStudentLoanBalanceResponse}
+import com.ogun.tenii.studentloans.model.api._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.Future
@@ -21,10 +21,11 @@ class BalanceActor extends Actor with LazyLogging with StudentLoanImplicit {
         connection.findByUserId(request.userId)
       } onComplete {
         case Success(loan) => loan match {
-          case Some(acc) => senderRef ! GetStudentLoanResponse(Some(toAPIStudentLoan(acc)))
-          case None => senderRef ! GetStudentLoanResponse(None, Some(s"No student loan exists with userId: ${request.userId}"))
+          case Some(acc) => senderRef ! GetStudentLoanResponse(toAPIStudentLoan(acc))
+          case None => senderRef ! ErrorResponse("NO_USER", Some(s"No student loan exists with userId: ${request.userId}"))
+            logger.error(s"No student loan exists with userId: ${request.userId}")
         }
-        case Failure(t) => senderRef ! GetStudentLoanResponse(None, Some(s"Failed to find student loan with id: ${request.userId} due to $t"))
+        case Failure(t) => senderRef ! ErrorResponse("SEARCH_FAILURE", Some(s"Search failed due to ${t.getMessage}"))
       }
 
     case request: UpdateStudentLoanBalanceRequest =>
@@ -37,13 +38,13 @@ class BalanceActor extends Actor with LazyLogging with StudentLoanImplicit {
             Future {
             connection.save(account)
             } onComplete {
-              case Success(_) => senderRef ! UpdateStudentLoanBalanceResponse(Some(toAPIStudentLoan(account)))
+              case Success(_) => senderRef ! UpdateStudentLoanBalanceResponse(toAPIStudentLoan(account))
               case Failure(t) => logger.error(s"Failed to update balance for request: $request", t)
-                senderRef ! UpdateStudentLoanBalanceResponse(None, Some(s"Failed to update balance for request: $request"))
+                senderRef ! ErrorResponse("UPDATE_ERROR", Some(s"Failed to update balance for request: ${t.getMessage}"))
           }
-          case None => senderRef ! UpdateStudentLoanBalanceResponse(None, Some(s"No student loan exists with userId: ${request.teniiId}"))
+          case None => senderRef ! ErrorResponse("UNKNOWN_USER", Some(s"No student loan exists with userId: ${request.teniiId}"))
         }
-        case Failure(t) => senderRef ! UpdateStudentLoanBalanceResponse(None, Some(s"Failed to find student loan with id: ${request.teniiId} due to $t"))
+        case Failure(t) => senderRef ! ErrorResponse("SEARCH_ERROR", Some(s"Failed to find student loan with id: ${request.teniiId} due to ${t.getMessage}"))
       }
 
     case other => logger.error(s"Unknown message received: $other")
