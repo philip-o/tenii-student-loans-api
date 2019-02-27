@@ -3,7 +3,7 @@ package com.ogun.tenii.studentloans.actors
 import akka.actor.Actor
 import com.ogun.tenii.studentloans.db.StudentLoanConnection
 import com.ogun.tenii.studentloans.implicits.StudentLoanImplicit
-import com.ogun.tenii.studentloans.model.api.{CreateStudentLoan, CreateStudentLoanResponse, ErrorResponse, StudentLoan}
+import com.ogun.tenii.studentloans.model.api.{CreateStudentLoan, CreateStudentLoanResponse, ErrorResponse}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.Future
