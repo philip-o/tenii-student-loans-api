@@ -6,11 +6,9 @@ import com.mongodb.casbah.Imports._
 import com.ogun.tenii.studentloans.config.Config
 import com.typesafe.scalalogging.LazyLogging
 
-import scala.util.Properties
-
 object MongoFactory {
   private val DATABASE = Config.database//Properties.envOrElse("MONGO_DB", "tenii-student-loans")
-  val uri = MongoClientURI(s"mongodb://${Properties.envOrElse("MONGO_HOST", "localhost:27017")}/$DATABASE")
+  val uri = MongoClientURI(s"mongodb://${Config.host}/$DATABASE")
   val mongoClient = MongoClient(uri)
   val db = mongoClient(DATABASE)
 
